@@ -16,6 +16,7 @@ public class VisionSense : MonoBehaviour
     private bool playerVisibleShort = false;
     private bool playerVisibleLong = false;
     [HideInInspector] public bool playerVisible = false;
+    Transform tempTargetInfo = null;
     [HideInInspector] public Transform targetInfo = null; 
 
     private void Start()
@@ -30,8 +31,11 @@ public class VisionSense : MonoBehaviour
         while(true)
         {
             yield return wait;
-            if (FOVCheck(shortRadiusFOV,shortAngleFOV))
+            if (FOVCheck(shortRadiusFOV, shortAngleFOV))
+            {
                 playerVisibleShort = true;
+                targetInfo = tempTargetInfo;
+            }
             else
                 playerVisibleShort = false;
             netVisibility();
@@ -45,7 +49,10 @@ public class VisionSense : MonoBehaviour
         {
             yield return wait;
             if (FOVCheck(longRadiusFOV,longAngleFOV))
+            {
                 playerVisibleLong = true;
+                targetInfo = tempTargetInfo;
+            }
             else
                 playerVisibleLong = false;
             netVisibility();
@@ -69,14 +76,14 @@ public class VisionSense : MonoBehaviour
             return false;
 
         //out of FOV
-        targetInfo = visibleItems[0].transform;
-        Vector3 directionToPlayer = (targetInfo.position - transform.position).normalized;
+        tempTargetInfo = visibleItems[0].transform;
+        Vector3 directionToPlayer = (tempTargetInfo.position - transform.position).normalized;
         float angleWithPlayer = Vector3.Angle(transform.forward, directionToPlayer);
         if (angleWithPlayer > angleFOV / 2)
             return false;
 
         //obstacle
-        float distanceToPlayer = Vector3.Distance(targetInfo.position, transform.position);
+        float distanceToPlayer = Vector3.Distance(tempTargetInfo.position, transform.position);
         if (Physics.Raycast(transform.position, directionToPlayer, distanceToPlayer, obstructionMask))
             return false;
         

@@ -613,7 +613,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 763024308}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 17.53, y: 0.65, z: -20.52}
+  m_LocalPosition: {x: 21.4, y: 0.65, z: -25.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 421884070}
@@ -1118,7 +1118,7 @@ NavMeshAgent:
   m_Speed: 5
   m_Acceleration: 100
   avoidancePriority: 50
-  m_AngularSpeed: 1200
+  m_AngularSpeed: 10000
   m_StoppingDistance: 0
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
@@ -1135,7 +1135,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1887620472}
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: 17.76, y: 0.65, z: -15.53}
+  m_LocalPosition: {x: 5.21, y: 0.65, z: -3.07}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 518921073}
@@ -1155,8 +1155,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f192da69ffae7134e83d05238e4e3126, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  huntState: 0
-  enemyCam: {fileID: 2108086996}
+  directorPOI: {fileID: 497548720774125595}
+  stateChangeFlag: 1
+  POIMask:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!114 &1887620478
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1309,6 +1312,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6b197778e51c59440b3534c106468edd, type: 3}
+--- !u!4 &497548720774125595 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5419427651334330911, guid: 6b197778e51c59440b3534c106468edd, type: 3}
+  m_PrefabInstance: {fileID: 497548720774125594}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1470638100046758178
 PrefabInstance:
   m_ObjectHideFlags: 0

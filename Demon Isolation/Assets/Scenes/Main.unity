@@ -187,7 +187,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 9
+  m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &421884069
 GameObject:
@@ -890,16 +890,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12033e94eeaacf4418e3155c7eb430ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shortRadiusFOV: 4.04
-  shortAngleFOV: 98
-  longRadiusFOV: 14.98
-  longAngleFOV: 22
+  shortRadiusFOV: 6
+  shortAngleFOV: 120
+  longRadiusFOV: 20
+  longAngleFOV: 22.5
   playerMask:
     serializedVersion: 2
     m_Bits: 64
   obstructionMask:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 183
   playerVisible: 0
   targetInfo: {fileID: 0}
 --- !u!1001 &1578400691
@@ -1052,7 +1052,7 @@ Transform:
   m_LocalScale: {x: 100, y: 0.6660863, z: 100}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 10
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1887620472
 GameObject:
@@ -1115,10 +1115,10 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 3.5
-  m_Acceleration: 8
+  m_Speed: 5
+  m_Acceleration: 100
   avoidancePriority: 50
-  m_AngularSpeed: 120
+  m_AngularSpeed: 1200
   m_StoppingDistance: 0
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
@@ -1141,7 +1141,7 @@ Transform:
   - {fileID: 518921073}
   - {fileID: 1484900418}
   m_Father: {fileID: 0}
-  m_RootOrder: 11
+  m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &1887620477
 MonoBehaviour:
@@ -1155,6 +1155,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f192da69ffae7134e83d05238e4e3126, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  huntState: 0
+  enemyCam: {fileID: 2108086996}
 --- !u!114 &1887620478
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1248,7 +1250,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 12
+  m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &497548720774125594
 PrefabInstance:

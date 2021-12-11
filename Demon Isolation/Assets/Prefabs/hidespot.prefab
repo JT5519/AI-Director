@@ -72,7 +72,7 @@ GameObject:
   - component: {fileID: 7285130301593710006}
   - component: {fileID: 7026546847119594472}
   - component: {fileID: 4529531284523809284}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: hidespot
   m_TagString: hidespot
   m_Icon: {fileID: 0}

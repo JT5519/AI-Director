@@ -6,7 +6,7 @@ using UnityEngine.AI;
 public class EnemyMotor : MonoBehaviour
 {
     NavMeshAgent agent;
-
+   
     private void Start()
     {
         agent = GetComponent<NavMeshAgent>();

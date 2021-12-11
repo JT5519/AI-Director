@@ -13,8 +13,6 @@ public class VisionSense : MonoBehaviour
     public LayerMask playerMask;
     public LayerMask obstructionMask;
 
-    private EnemyController myController;
-
     private bool playerVisibleShort = false;
     private bool playerVisibleLong = false;
     [HideInInspector] public bool playerVisible = false;
@@ -22,7 +20,6 @@ public class VisionSense : MonoBehaviour
 
     private void Start()
     {
-        myController = transform.parent.GetComponent<EnemyController>();
         StartCoroutine(ShortFOVRoutine());
         StartCoroutine(LongFOVRoutine());
     }

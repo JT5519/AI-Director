@@ -20,12 +20,12 @@ public class EnemyController : MonoBehaviour
         public bool isInterruptable;
         public bool isRunning;
         public float agentSpeedInState;
-        public State(stateNames s, bool i,bool iR=false,float aS=5)
+        public State(stateNames s, bool i, float aS, bool iR=false)
         {
             this.state = s;
             this.isInterruptable = i;
-            this.isRunning = iR;
             this.agentSpeedInState = aS;
+            this.isRunning = iR;
         }
     }
 
@@ -33,17 +33,25 @@ public class EnemyController : MonoBehaviour
     public delegate IEnumerator RoutineDelegate();
     List<RoutineDelegate> stateRoutineList = new List<RoutineDelegate>(3);
     stateNames currentStateIndex = stateNames.prowl;
-    
-    stateNames directorStateIndex = stateNames.prowl; //placeholder for director input
-    [SerializeField] Transform directorPOI;
+
+    [HideInInspector] public stateNames directorStateIndex = stateNames.prowl; 
+    [HideInInspector] public Transform directorPOI=null;
     
     [HideInInspector] public bool stateChangeFlag = true;
     
     VisionSense vision;
 
-    Coroutine InterruptCheckerRoutineController;
+    Coroutine InterruptCheckRoutineController;
 
+    [Header("Prowl Box Settings")]
     [SerializeField] private LayerMask POIMask;
+    public float POIBoxHuntX = 5;
+    public float POIBoxHuntY = 2;
+    public float POIBoxHuntZ = 5;
+
+    [Header("Speed Settings")]
+    public float huntSpeed  = 10;
+    public float prowlSpeed = 5;
 
     private void Start()
     {
@@ -51,9 +59,9 @@ public class EnemyController : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
 
         //creating the states 
-        stateList.Add(new State(stateNames.hunt, false,false,10));
-        stateList.Add(new State(stateNames.prowl, true));
-        stateList.Add(new State(stateNames.avoid, true));
+        stateList.Add(new State(stateNames.hunt, false,huntSpeed));
+        stateList.Add(new State(stateNames.prowl, true,prowlSpeed));
+        stateList.Add(new State(stateNames.avoid, true,prowlSpeed));
 
         stateRoutineList.Add(HuntRoutine);
         stateRoutineList.Add(ProwlRoutine);
@@ -74,23 +82,23 @@ public class EnemyController : MonoBehaviour
             Coroutine currentRoutine = StartCoroutine(stateRoutineList[(int)currentStateIndex]());
             try
             {
-                StopCoroutine(InterruptCheckerRoutineController);
+                StopCoroutine(InterruptCheckRoutineController);
             }
             catch(NullReferenceException)
             {
                 //Do nothing, the coroutine was already terminated
             }
             if(stateList[(int)currentStateIndex].isInterruptable)
-                InterruptCheckerRoutineController = StartCoroutine(InterruptTestRoutine(currentRoutine));
+                InterruptCheckRoutineController = StartCoroutine(InterruptCheckRoutine(currentRoutine));
         }
     }
-    IEnumerator InterruptTestRoutine(Coroutine currentRoutine)
+    IEnumerator InterruptCheckRoutine(Coroutine currentRoutine)
     {
         WaitForSeconds wait = new WaitForSeconds(0.2f);
         while (true)
         {
             yield return wait;
-            if(InterruptAlert())
+            if(IsPlayerDetected())
             {
                 StopCoroutine(currentRoutine);
                 stateChangeFlag = true;
@@ -106,24 +114,32 @@ public class EnemyController : MonoBehaviour
             enemyMotor.MoveToPoint(vision.targetInfo.position);
             yield return wait;
         }
+        yield return new WaitUntil(NavMeshPathCompletionTest);
         stateChangeFlag = true;
     }
     IEnumerator ProwlRoutine()
     {
         WaitForSeconds wait = new WaitForSeconds(0.2f);
         yield return wait;
-        enemyMotor.MoveToPoint(directorPOI.position);
-
+        
+        try
+        {
+            enemyMotor.MoveToPoint(directorPOI.position);
+        }
+        catch(UnassignedReferenceException)
+        {
+            //Do nothing, prowl vicinity
+        }
         yield return new WaitUntil(NavMeshPathCompletionTest);
         Queue<Vector3> POIs = FindVicinityPOIs();
-        Debug.Log(POIs.Count);
+        
         while(POIs.Count!=0)
         {
             yield return wait;
             enemyMotor.MoveToPoint(POIs.Dequeue());
             yield return new WaitUntil(NavMeshPathCompletionTest);
         }
-
+        
         stateChangeFlag = true;
     }
     IEnumerator AvoidRoutine()
@@ -152,7 +168,7 @@ public class EnemyController : MonoBehaviour
     }
     private void StateChoice()
     {
-        if (vision.playerVisible)
+        if (IsPlayerDetected())
             currentStateIndex = stateNames.hunt;
         else if (directorStateIndex == stateNames.prowl)
             currentStateIndex = stateNames.prowl;
@@ -160,7 +176,7 @@ public class EnemyController : MonoBehaviour
             currentStateIndex = stateNames.avoid;
         stateChangeFlag = false;
     }
-    private bool InterruptAlert()
+    private bool IsPlayerDetected()
     {
         return vision.playerVisible;
     }
@@ -168,7 +184,7 @@ public class EnemyController : MonoBehaviour
     {
         Queue<Vector3> POIQueue = new Queue<Vector3>();
         
-        Vector3 boxBounds = new Vector3(5, 2, 5);
+        Vector3 boxBounds = new Vector3(POIBoxHuntX, POIBoxHuntY,POIBoxHuntZ);
         Vector3 boxCenter = transform.position;
         boxCenter.y += GetComponent<CapsuleCollider>().height / 2;
 

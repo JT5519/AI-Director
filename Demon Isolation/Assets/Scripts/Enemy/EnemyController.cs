@@ -66,7 +66,7 @@ public class EnemyController : MonoBehaviour
         stateRoutineList.Add(ActiveHuntRoutine);
         stateRoutineList.Add(PassiveHuntRoutine);
         stateRoutineList.Add(ProwlRoutine);
-        stateRoutineList.Add(AvoidRoutine);
+        stateRoutineList.Add(ProwlRoutine);
 
         vision = GetComponentInChildren<VisionSense>();
 
@@ -161,11 +161,7 @@ public class EnemyController : MonoBehaviour
 
         stateChangeFlag = true;
     }
-    IEnumerator AvoidRoutine()
-    {
-        yield return null;
-        stateChangeFlag = true;
-    }
+
     /*private void Update()
     {
         //test code to click and move enemy

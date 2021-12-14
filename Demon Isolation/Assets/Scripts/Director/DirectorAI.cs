@@ -10,6 +10,7 @@ public class DirectorAI : MonoBehaviour
     public Camera FPSCamera;
     public float ProjectionLimitToMesh = 5f;
     public LayerMask IgnorePlayerMask;
+    public NavMeshObstacle playerObstacle;
 
     [Header("Enemy Components")]
     public GameObject enemy;
@@ -17,6 +18,15 @@ public class DirectorAI : MonoBehaviour
     public EnemyController enemyController;
     public CapsuleCollider enemyCollider;
     public VisionSense enemyVision;
+
+    [Header("House Components")]
+    public float QuadrantSize = 17;
+    public Transform[] QuadrantPOI;
+    public Transform[] CornerPOI;
+    private enum QuadrantIndex
+    {
+        northwest,north,northeast,west,center,east,soutwest,south,southeast,none
+    }
 
     private NavMeshPath path;
     private NavMeshHit NavPointClosestToPlayer;
@@ -77,13 +87,56 @@ public class DirectorAI : MonoBehaviour
     private void SetDirectorStateIndex()
     {
         if (isMenaced)
+        {
             enemyController.directorStateIndex = EnemyController.stateNames.avoid;
+            enemyController.directorPOI = FindFarthestQuadrant();
+        }
         else
+        {
             enemyController.directorStateIndex = EnemyController.stateNames.prowl;
-
-        //set POI based on director suggestion
+            enemyController.directorPOI = FindNearestQuadrant();
+        }
     }
- 
+    private Transform FindFarthestQuadrant()
+    {
+        float maxSquareDistance = float.NegativeInfinity;
+        Transform farthestPOI = null;
+
+        Vector3 playerPos = player.transform.position;
+
+        foreach(Transform currentPOI in CornerPOI)
+        {
+            float squareMag = Vector3.SqrMagnitude(playerPos - currentPOI.position);
+            if (squareMag > maxSquareDistance)
+            {
+                farthestPOI = currentPOI;
+                maxSquareDistance = squareMag;
+            }
+        }
+
+        return farthestPOI;
+    }
+    private Transform FindNearestQuadrant()
+    {
+        float minSquareDistance = float.PositiveInfinity;
+        Transform nearestPOI = null;
+
+        Vector3 playerPos = player.transform.position;
+
+        foreach(Transform currentPOI in QuadrantPOI)
+        {
+            float squareMag = Vector3.SqrMagnitude(playerPos - currentPOI.position);
+            if (squareMag < QuadrantSize*QuadrantSize * 0.25f)
+                return currentPOI;
+            else if(squareMag < minSquareDistance)
+            {
+                nearestPOI = currentPOI;
+                minSquareDistance = squareMag;
+            }
+        }
+
+        return nearestPOI;
+    }
     private float CalculateMenaceDelta()
     {
         if (enemyVision.shortRadiusFOV < distance && distance < enemyVision.longRadiusFOV)
@@ -117,6 +170,7 @@ public class DirectorAI : MonoBehaviour
         {
             yield return wait;
             NavMesh.SamplePosition(player.transform.position,out NavPointClosestToPlayer, ProjectionLimitToMesh, NavMesh.AllAreas);
+
             if (agent.CalculatePath(NavPointClosestToPlayer.position, path))
                 distance = CalculatePathLength(enemy.transform.position);
             else

@@ -7,7 +7,7 @@ public class PlayerMotor : MonoBehaviour
     CharacterController selfController;
     public float runSpeed = 5;
     public float walkSpeed = 2;
-    float gravity = -9.81f;
+    public float gravity = -9.81f;
 
     public enum runState
     {

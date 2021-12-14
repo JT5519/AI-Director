@@ -1,14 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.AI;
 
 public class DirectorAI : MonoBehaviour
 {
-    [Header("Visualise Menace")]
-    public Text menaceText;
-
     [Header("Player Components")]
     public GameObject player;
     public Camera FPSCamera;
@@ -20,21 +16,100 @@ public class DirectorAI : MonoBehaviour
     public NavMeshAgent agent;
     public EnemyController enemyController;
     public CapsuleCollider enemyCollider;
+    public VisionSense enemyVision;
 
     private NavMeshPath path;
     private NavMeshHit NavPointClosestToPlayer;
-    private float distance = 0;
-    private bool enemyVisible;
+    
+    [Header("Menace Parameters")]
+    [SerializeField] float maxPositiveDistCoeff = 5;
+    [SerializeField] float negativeDistCoeff = -5/6f;
+    [SerializeField] float visibilityCoefficient = 2;
 
-    //private int MENACE_BAR = 0;
+    [SerializeField] float activeHuntCoefficient = 5;
+    [SerializeField] float passiveHuntCoefficient = 2;
+    [SerializeField] float prowlCoefficient = 0;
+
+    [SerializeField] float menaceCutoff = 75;
+    [SerializeField] float relaxCutoff = 25;
+
+    [Header("Director Statistics")]
+    [Tooltip("Menace has range: 0 to 100. Player is considered menaced if menace > 75. Once menaced, player is considered relaxed once menace < 25")]
+    [Range(0,100)] [SerializeField] private float menace = 0;
+    [Tooltip("Menace State. Menaced or Relaxed")]
+    [SerializeField] private bool isMenaced = false;
+    [Tooltip("Distance between enemy and player. This is path length, not straight line shortest distance.")]
+    [SerializeField] private float distance = 0;
+    [Tooltip("If enemy is visible to the player or not. True when enemy in camera frustrum and raycast from player hits enemy.")]
+    [SerializeField] private bool enemyVisible = false;
+
+    [SerializeField] private float effectiveDistanceCoeff = 0;
+    [SerializeField] private float effectiveVisiblityCoeff = 0;
+    [SerializeField] private float effectiveHuntCoeff = 0;
+    [SerializeField] private float totalCoeff = 0;
 
     private void Start()
     {
         path = new NavMeshPath();
         StartCoroutine(PathCheck());
         StartCoroutine(VisibilityCheck());
+        StartCoroutine(MenaceHandler());
     }
+    IEnumerator MenaceHandler()
+    {
+        WaitForSeconds wait = new WaitForSeconds(1f);
 
+        while (true)
+        {
+            yield return wait;
+
+            float deltaMenace = CalculateMenaceDelta();
+
+            menace = Mathf.Clamp(menace + deltaMenace, 0,100);
+            if (menace > menaceCutoff)
+                isMenaced = true;
+            else if (menace < relaxCutoff)
+                isMenaced = false;
+
+            SetDirectorStateIndex();
+        }
+    }
+    private void SetDirectorStateIndex()
+    {
+        if (isMenaced)
+            enemyController.directorStateIndex = EnemyController.stateNames.avoid;
+        else
+            enemyController.directorStateIndex = EnemyController.stateNames.prowl;
+
+        //set POI based on director suggestion
+    }
+ 
+    private float CalculateMenaceDelta()
+    {
+        if (enemyVision.shortRadiusFOV < distance && distance < enemyVision.longRadiusFOV)
+            effectiveDistanceCoeff = (1 / distance) * enemyVision.shortRadiusFOV * maxPositiveDistCoeff;
+        else if (distance <= enemyVision.shortRadiusFOV)
+            effectiveDistanceCoeff = maxPositiveDistCoeff;
+        else
+            effectiveDistanceCoeff = negativeDistCoeff;
+
+        if (enemyVisible)
+            effectiveVisiblityCoeff = visibilityCoefficient * effectiveDistanceCoeff / maxPositiveDistCoeff;
+        else
+            effectiveVisiblityCoeff = 0;
+
+        if (enemyController.currentStateIndex == EnemyController.stateNames.activeHunt)
+            effectiveHuntCoeff = activeHuntCoefficient;
+        else if (enemyController.currentStateIndex == EnemyController.stateNames.passiveHunt)
+            effectiveHuntCoeff = passiveHuntCoefficient;
+        else if (enemyController.currentStateIndex == EnemyController.stateNames.prowl)
+            effectiveHuntCoeff = prowlCoefficient;
+        else
+            effectiveHuntCoeff = 0;
+
+        totalCoeff = effectiveDistanceCoeff + effectiveVisiblityCoeff + effectiveHuntCoeff;
+        return totalCoeff;
+    }
     IEnumerator PathCheck()
     {
         WaitForSeconds wait = new WaitForSeconds(1f);
@@ -42,8 +117,10 @@ public class DirectorAI : MonoBehaviour
         {
             yield return wait;
             NavMesh.SamplePosition(player.transform.position,out NavPointClosestToPlayer, ProjectionLimitToMesh, NavMesh.AllAreas);
-            agent.CalculatePath(NavPointClosestToPlayer.position, path);
-            distance = CalculatePathLength(enemy.transform.position);
+            if (agent.CalculatePath(NavPointClosestToPlayer.position, path))
+                distance = CalculatePathLength(enemy.transform.position);
+            else
+                distance = float.PositiveInfinity;
 
             //Debug.Log("Path Status: "+path.status);
             //Debug.Log("Path Length: "+distance);
@@ -57,7 +134,7 @@ public class DirectorAI : MonoBehaviour
         {
             yield return wait;
             enemyVisible = VisibilityRayCastCheck();
-            Debug.Log("Enemy Visibility: " + enemyVisible);
+            //Debug.Log("Enemy Visibility: " + enemyVisible);
         }
     }
 

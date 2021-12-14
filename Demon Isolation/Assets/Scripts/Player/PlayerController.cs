@@ -19,6 +19,7 @@ public class PlayerController : MonoBehaviour
     [HideInInspector] public visibiltyFlagBits visibilityFlag = visibiltyFlagBits.visible; //2
 
     Coroutine routineController;
+
     private void Start()
     {
         playerMotor = gameObject.GetComponent<PlayerMotor>();
@@ -50,14 +51,16 @@ public class PlayerController : MonoBehaviour
         Vector3 playerInitialPosition = transform.position;
         float slerpPercent = 0f;
         float slerpSpeed = 0.5f;
-        while(transform.position!=currentHideSpot.position && slerpPercent<1f)
+        while (transform.position != currentHideSpot.position && slerpPercent < 1f)
         {
             transform.position = Vector3.Slerp(playerInitialPosition, currentHideSpot.position, slerpPercent);
-            slerpPercent += slerpSpeed*Time.deltaTime;
+            slerpPercent += slerpSpeed * Time.deltaTime;
             yield return null;
         }
+
         visibilityFlag = visibiltyFlagBits.invisible;
         hideFlag = hideFlagBits.hidden;
+        gameObject.layer = LayerMask.NameToLayer("Invisible");
     }
     IEnumerator playerExitHideSpot()
     {
@@ -69,8 +72,10 @@ public class PlayerController : MonoBehaviour
             slerpPercent += slerpSpeed * Time.deltaTime;
             yield return null;
         }
+
         visibilityFlag = visibiltyFlagBits.visible;
         hideFlag = hideFlagBits.dontHide;
         playerMotor.enabled = true;
+        gameObject.layer = LayerMask.NameToLayer("Player");
     }
 }

@@ -61,7 +61,9 @@ public class VisionSense : MonoBehaviour
     private void netVisibility()
     {
         if (playerVisibleLong || playerVisibleShort)
+        {
             playerVisible = true;
+        }
         else
         {
             playerVisible = false;
@@ -70,7 +72,7 @@ public class VisionSense : MonoBehaviour
     }
     private bool FOVCheck(float radiusFOV, float angleFOV)
     {
-        //out of vision sphere
+        //out of vision sphere OR player Invisible
         Collider[] visibleItems = Physics.OverlapSphere(transform.position, radiusFOV, playerMask);
         if (visibleItems.Length == 0)
             return false;

@@ -12,28 +12,27 @@ public class EnemyController : MonoBehaviour
 
     public enum stateNames
     {
-        hunt, prowl, avoid
+        activeHunt, passiveHunt, prowl, avoid, ignore
     }
     public struct State
     {
         public stateNames state;
         public bool isInterruptable;
-        public bool isRunning;
         public float agentSpeedInState;
-        public State(stateNames s, bool i, float aS, bool iR=false)
+        public State(stateNames s, bool i, float aS)
         {
             this.state = s;
             this.isInterruptable = i;
             this.agentSpeedInState = aS;
-            this.isRunning = iR;
         }
     }
 
-    List<State> stateList = new List<State>(3);
+    List<State> stateList = new List<State>(4);
     public delegate IEnumerator RoutineDelegate();
-    List<RoutineDelegate> stateRoutineList = new List<RoutineDelegate>(3);
-    stateNames currentStateIndex = stateNames.prowl;
+    List<RoutineDelegate> stateRoutineList = new List<RoutineDelegate>(4);
+    public stateNames currentStateIndex = stateNames.prowl;
 
+    private stateNames myNextStateIndex = stateNames.ignore;
     [HideInInspector] public stateNames directorStateIndex = stateNames.prowl; 
     [HideInInspector] public Transform directorPOI=null;
     
@@ -59,11 +58,13 @@ public class EnemyController : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
 
         //creating the states 
-        stateList.Add(new State(stateNames.hunt, false,huntSpeed));
+        stateList.Add(new State(stateNames.activeHunt, false,huntSpeed));
+        stateList.Add(new State(stateNames.passiveHunt, true, huntSpeed));
         stateList.Add(new State(stateNames.prowl, true,prowlSpeed));
         stateList.Add(new State(stateNames.avoid, true,prowlSpeed));
 
-        stateRoutineList.Add(HuntRoutine);
+        stateRoutineList.Add(ActiveHuntRoutine);
+        stateRoutineList.Add(PassiveHuntRoutine);
         stateRoutineList.Add(ProwlRoutine);
         stateRoutineList.Add(AvoidRoutine);
 
@@ -78,6 +79,7 @@ public class EnemyController : MonoBehaviour
         {
             yield return wait;
             StateChoice();
+            Debug.Log("Current State: " + currentStateIndex);
             StateInit();
             Coroutine currentRoutine = StartCoroutine(stateRoutineList[(int)currentStateIndex]());
             try
@@ -100,13 +102,14 @@ public class EnemyController : MonoBehaviour
             yield return wait;
             if(IsPlayerDetected())
             {
+                //Debug.Log("Interrupted");
                 StopCoroutine(currentRoutine);
                 stateChangeFlag = true;
                 yield break;
             }
         }
     }
-    IEnumerator HuntRoutine()
+    IEnumerator ActiveHuntRoutine()
     {  
         WaitForSeconds wait = new WaitForSeconds(0.2f);
         while(vision.targetInfo!=null)
@@ -114,7 +117,23 @@ public class EnemyController : MonoBehaviour
             enemyMotor.MoveToPoint(vision.targetInfo.position);
             yield return wait;
         }
+        SetNextState(stateNames.passiveHunt);
+        stateChangeFlag = true;
+    }
+    IEnumerator PassiveHuntRoutine()
+    {
+        WaitForSeconds wait = new WaitForSeconds(0.2f);
+
         yield return new WaitUntil(NavMeshPathCompletionTest);
+        Queue<Vector3> POIs = FindVicinityPOIs();
+
+        while (POIs.Count != 0)
+        {
+            yield return wait;
+            enemyMotor.MoveToPoint(POIs.Dequeue());
+            yield return new WaitUntil(NavMeshPathCompletionTest);
+        }
+
         stateChangeFlag = true;
     }
     IEnumerator ProwlRoutine()
@@ -139,7 +158,7 @@ public class EnemyController : MonoBehaviour
             enemyMotor.MoveToPoint(POIs.Dequeue());
             yield return new WaitUntil(NavMeshPathCompletionTest);
         }
-        
+
         stateChangeFlag = true;
     }
     IEnumerator AvoidRoutine()
@@ -166,19 +185,30 @@ public class EnemyController : MonoBehaviour
     {
         agent.speed = stateList[(int)currentStateIndex].agentSpeedInState;
     }
+
     private void StateChoice()
     {
         if (IsPlayerDetected())
-            currentStateIndex = stateNames.hunt;
-        else if (directorStateIndex == stateNames.prowl)
-            currentStateIndex = stateNames.prowl;
-        else if (directorStateIndex == stateNames.avoid)
-            currentStateIndex = stateNames.avoid;
+            currentStateIndex = stateNames.activeHunt;
+        else if (myNextStateIndex != stateNames.ignore)
+            currentStateIndex = myNextStateIndex;
+        else
+            currentStateIndex = directorStateIndex;
+
+        ResetNextState();
         stateChangeFlag = false;
     }
     private bool IsPlayerDetected()
     {
         return vision.playerVisible;
+    }
+    private void SetNextState(stateNames state)
+    {
+        myNextStateIndex = state;
+    }
+    private void ResetNextState()
+    {
+        myNextStateIndex = stateNames.ignore;
     }
     private Queue<Vector3> FindVicinityPOIs()
     {

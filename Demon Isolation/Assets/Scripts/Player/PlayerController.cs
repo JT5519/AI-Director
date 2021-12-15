@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.AI;
 public class PlayerController : MonoBehaviour
 {
     PlayerMotor playerMotor;
@@ -20,9 +20,12 @@ public class PlayerController : MonoBehaviour
 
     Coroutine routineController;
 
+    NavMeshObstacle selfObstacle;
+
     private void Start()
     {
         playerMotor = gameObject.GetComponent<PlayerMotor>();
+        selfObstacle = GetComponent<NavMeshObstacle>();
     }
     private void Update()
     {
@@ -61,6 +64,7 @@ public class PlayerController : MonoBehaviour
         visibilityFlag = visibiltyFlagBits.invisible;
         hideFlag = hideFlagBits.hidden;
         gameObject.layer = LayerMask.NameToLayer("Invisible");
+        selfObstacle.enabled = false;
     }
     IEnumerator playerExitHideSpot()
     {
@@ -73,9 +77,11 @@ public class PlayerController : MonoBehaviour
             yield return null;
         }
 
+        playerMotor.enabled = true;
+
         visibilityFlag = visibiltyFlagBits.visible;
         hideFlag = hideFlagBits.dontHide;
-        playerMotor.enabled = true;
         gameObject.layer = LayerMask.NameToLayer("Player");
+        selfObstacle.enabled = true;
     }
 }

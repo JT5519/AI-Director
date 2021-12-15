@@ -28,6 +28,9 @@ public class VisionSenseEditor : Editor
         Handles.DrawLine(vs.transform.position, vs.transform.position + viewAngle03 * vs.longRadiusFOV);
         Handles.DrawLine(vs.transform.position, vs.transform.position + viewAngle04 * vs.longRadiusFOV);
 
+        Handles.color = Color.cyan;
+        Handles.DrawWireDisc(vs.transform.position, Vector3.up, vs.extremeShortRadiusFOV);
+
         if (vs.playerVisible && vs.targetInfo!=null)
         {
             Handles.color = Color.green;

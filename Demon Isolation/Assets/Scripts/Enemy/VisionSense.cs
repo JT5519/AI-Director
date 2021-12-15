@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class VisionSense : MonoBehaviour
 {
+    public float extremeShortRadiusFOV;
+    [Range(0, 360)] public float extremeShortAngleFOV;
+
     public float shortRadiusFOV;
     [Range(0, 360)] public float shortAngleFOV;
 
@@ -13,6 +16,7 @@ public class VisionSense : MonoBehaviour
     public LayerMask playerMask;
     public LayerMask obstructionMask;
 
+    private bool playerVisibleExtremeShort = false;
     private bool playerVisibleShort = false;
     private bool playerVisibleLong = false;
     [HideInInspector] public bool playerVisible = false;
@@ -21,8 +25,26 @@ public class VisionSense : MonoBehaviour
 
     private void Start()
     {
+        StartCoroutine(ExtremeShortFOVRoutine());
         StartCoroutine(ShortFOVRoutine());
         StartCoroutine(LongFOVRoutine());
+    }
+    IEnumerator ExtremeShortFOVRoutine()
+    {
+        float delay = 0.1f;
+        WaitForSeconds wait = new WaitForSeconds(delay);
+        while(true)
+        {
+            yield return wait;
+            if (OptimisedFOVCheck(extremeShortRadiusFOV))
+            {
+                playerVisibleExtremeShort = true;
+                targetInfo = tempTargetInfo;
+            }
+            else
+                playerVisibleExtremeShort = false;
+            netVisibility();
+        }
     }
     IEnumerator ShortFOVRoutine()
     {
@@ -60,7 +82,7 @@ public class VisionSense : MonoBehaviour
     }
     private void netVisibility()
     {
-        if (playerVisibleLong || playerVisibleShort)
+        if (playerVisibleLong || playerVisibleShort || playerVisibleExtremeShort)
         {
             playerVisible = true;
         }
@@ -69,6 +91,15 @@ public class VisionSense : MonoBehaviour
             playerVisible = false;
             targetInfo = null;
         }
+    }
+    private bool OptimisedFOVCheck(float radiusFOV)
+    {
+        Collider[] visibleItems = Physics.OverlapSphere(transform.position, radiusFOV, playerMask);
+        if (visibleItems.Length == 0)
+            return false;
+
+        tempTargetInfo = visibleItems[0].transform;
+        return true;
     }
     private bool FOVCheck(float radiusFOV, float angleFOV)
     {

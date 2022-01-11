@@ -13,7 +13,8 @@ The AI Director maintains a menace bar to measure how “menaced” the player i
 ![FPS View](Snaps/FpsView.png)
 <br/>*First Person View as the player. The bottom right side has a top view minimap to better see the Director and Enemy AI behaviour. The top view camera should be disabled for the ideal game experience*<br/><br/>
 
- 
+[Here's a video that explains and demonstrates the project](https://www.youtube.com/watch?v=L_wyFUZwEG8)
+<br/><br/>
 ## Design and Implementation
 
 ### The Enemy AI

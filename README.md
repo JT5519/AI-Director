@@ -48,72 +48,42 @@ The enemy AI is a navmesh agent and it uses Unity’s built in NavMesh system.
 <br/>*The baked NavMesh*<br/><br/>
 
 #### Sensing
-The enemy AI has 3 vision sensors: An extremely short range 360 degrees sensor, A short range 120 degree FOV sensor, and a long range 22.5 degree FOV sensor. Editor scripts visualise these FOV’s well (highlight the “Sense” game object that has the “Enemy” game object as its parent and expand the VisionSense script component in the inspector if it already is not).
-The Three sensing radii with their FOV lines. The innermost sensor has no FOV lines because it has a 360 degree FOV
-Technical Design
-The [VisionSense.cs] script has 3 coroutines that run with varying periodicities, for each of the three vision
-sensors. The extreme short-range sensor checks its radius once every 0.1 seconds. 0.2 seconds for the short
-range FOV and 0.5 seconds for the long range FOV.
-States
-The enemy AI has 5 states. These are: activeHunt, passiveHunt, prowl, avoid and ignore.
-activeHunt, passiveHunt and prowl states are obvious from their respective behaviours described above. The
-avoid state is just for debugging clarity, so that when the director suggests a location far away from the player,
-the Debug.Log message for the current state explicitly states that the enemy AI is avoiding the player. The
-behaviour routine that the enemy runs in this avoid state is the same prowl behaviour routine that runs for the
-prowl state. Since for all intents, the enemy AI still thinks it is going to prowl the location the director gives
-it and doesn’t know that it is actively avoiding the player. The ignore state is just the default variable to set to
-that tells the ActionCycle routine that nay state variable set to this value needs to be ignored.
-States are represented as structures. They have 3 attributes: stateName, isInterruptable and agentSpeedInState.
-The first two are exactly what their name suggests and the isInterruptable is what the ActionCycle routine
-checks before starting off the interrupt routine. The agentSpeedInState variable determines the speed of the
-enemy AI for the different states, the enemy AI is faster moving when it is actively or passively hunting the
-player and is slower otherwise.
-The AI Director
-The AI Director is essentially a single script: [DirectorAI.cs]. It is constantly measuring how menaced the
-player is and assigns locations for the enemy AI to prowl, that can be close to the player or far away from
-them.
-Menace
-How menaced the player is ranges from 0 to 100. The player is considered menaced if the menace value is
-over 75. If menaced, the player is only considered relaxed if the menace value decreases to lesser than 25.
-This creates a relaxation window between 75 to 25 at minimum and 100 to 25 at maximum.
-Parameters that affect Menace and how they affect Menace
-There are 3 parameters that affect menace:
-1. Path Distance:
-The Director has a PathCheck routine that periodically checks the navmesh path between the player
-and the enemy and calculates the path length.
-When the player is farther from the enemy AI than the enemy’s long-range vision radius, distance has
-a constant negative coefficient = -5/6. This value was chosen so that at minimum, the relaxation
-window lasts a minute. Since the minimum relaxation window is 50 menace points, a degradation of -
-5/6 per second makes it so that it takes 60 seconds to bring the menace down below 25. Distance is
-the only parameter that ever has a negative coefficient for the menace, that is why it gets the complete
--5/6 weight. Other parameters either positively affect the menace or don’t affect it (coefficient = 0)
-When the distance is between the long-range and short-range radius the distance coefficient is positive
-and inversely proportional to the distance magnitude. It varies such that it has a maximum value of +5
-when the player is at a short-range radius distance from the player.
-The formula is distance coeff = (1/distance) * shortFOVradius * 5
+The enemy AI has 3 vision sensors: An extremely short range 360 degrees sensor, A short range 120 degree FOV sensor, and a long range 22.5 degree FOV sensor. Editor scripts visualise these FOV’s well. 
+
+![Enemy Sensing](Snaps/Sensing.png)
+<br/>*The Three sensing radii with their FOV lines. The innermost sensor has no FOV lines because it has a 360 degree FOV. Highlight the “Sense” game object that has the “Enemy” game object as its parent and expand the VisionSense script component in the inspector, for the FOV gizmos to show.*<br/><br/>
+
+##### Technical Design
+The ***VisionSense.cs*** script has 3 coroutines that run with varying periodicities, for each of the three vision sensors. The extreme short-range sensor checks its radius once every 0.1 seconds. 0.2 seconds for the short range FOV and 0.5 seconds for the long range FOV.
+
+##### States
+The enemy AI has 5 states. These are: activeHunt, passiveHunt, prowl, avoid and ignore. 
+activeHunt, passiveHunt and prowl states are obvious from their respective behaviours described above. The avoid state is just for debugging clarity, so that when the director suggests a location far away from the player, the Debug.Log message for the current state explicitly states that the enemy AI is avoiding the player. The behaviour routine that the enemy runs in this avoid state is the same prowl behaviour routine that runs for the prowl state. Since for all intents, the enemy AI still thinks it is going to prowl the location the director gives it and doesn’t know that it is actively avoiding the player. The ignore state is just the default variable to set to that tells the ActionCycle routine that any state variable set to this value needs to be ignored. 
+
+States are represented as structures. They have 3 attributes: stateName, agentSpeedInState and isInterruptable. The first two are exactly what their name suggests and the isInterruptable is what the ActionCycle routine checks before starting off the interrupt routine. The agentSpeedInState variable determines the speed of the enemy AI for the different states, the enemy AI is faster moving when it is actively or passively hunting the player and is slower otherwise.
+
+<br/><br/>
+### The AI Director
+The AI Director is essentially a single script: ***DirectorAI.cs***. It is constantly measuring how menaced the player is and assigns locations for the enemy AI to prowl, that can be close to the player or far away from them.
+
+#### Menace
+How menaced the player is ranges from 0 to 100. The player is considered menaced if the menace value is over 75. If menaced, the player is only considered relaxed if the menace value decreases to lesser than 25. This creates a relaxation window between 75 to 25 at minimum and 100 to 25 at maximum. Parameters that affect Menace and how they affect Menace. There are 3 parameters that affect menace:
+* ***Path Distance***: The Director has a PathCheck routine that periodically checks the navmesh path between the player and the enemy and calculates the path length. When the player is farther from the enemy AI than the enemy’s long-range vision radius, distance has a constant negative coefficient = -5/6. This value was chosen so that at minimum, the relaxation window lasts a minute. Since the minimum relaxation window is 50 menace points, a degradation of -5/6 per second makes it so that it takes 60 seconds to bring the menace down below 25. Distance is the only parameter that ever has a negative coefficient for the menace, that is why it gets the complete -5/6 weight. Other parameters either positively affect the menace or don’t affect it (coefficient = 0) When the distance is between the long-range and short-range radius the distance coefficient is positive and inversely proportional to the distance magnitude. It varies such that it has a maximum value of +5 when the player is at a short-range radius distance from the player.
+
+*The formula is distance coeff = (1/distance) * shortFOVradius * 5*
+
 When the distance is lower than the short radius fov, it has a constant value that equals the maximum
 value for the function mentioned above, so it basically stays a constant +5 for any distance smaller
 than the shortFOV radius.
-2. Enemy Visibility:
-The Director periodically runs a VisibilityCheck routine that checks if the enemy is visible to the
-player. It does this by checking if the enemy is within the frustrum planes of the player’s FPS camera,
-and if it is, the director shoots a raycast from the player towards the enemy and checks if there are
-obstructions in the way. If the raycast hit’s the enemy AI, then the director considers the enemy visible
-to the player, else it considers the enemy is not visible.
-When visible, the visibility coefficient is positive and varies with the distance coefficient calculated
-above as:
-effectiveVisiblityCoeff = visibilityCoefficient * effectiveDistanceCoeff / maxPositiveDistCoeff;
-visibilityCoefficient by default is set to 2 (after some game balancing).
-effectiveDistanceCoefficient is the distance coefficient calculated above
-maxPositiveDistanceCoefficient is the maximum possible value for the distance coefficient = 5
-3. Enemy Hunt State:
-When the enemy is actively hunting the player, the HuntCoefficient is 5, and when passively hunting
-the HuntCoefficient is 2.
-After these menace parameters are calculated, their added to the current menace value, which is
-clamped between 0 and 100. This menace updation happens once per second. After the menace is
-updated, the director sets the placeholder variable the enemy AI has for director advice, as either
-stateNames.prowl or stateNames.avoid. The director also sets one of the quadrants as the vicinity of
-the player that the enemy AI uses as a starting point for its prowl.
+* ***Enemy Visibility***: The Director periodically runs a VisibilityCheck routine that checks if the enemy is visible to the player. It does this by checking if the enemy is within the frustrum planes of the player’s FPS camera, and if it is, the director shoots a raycast from the player towards the enemy and checks if there are obstructions in the way. If the raycast hit’s the enemy AI, then the director considers the enemy visible to the player, else it considers the enemy is not visible. When visible, the visibility coefficient is positive and varies with the distance coefficient calculated above as:
+
+*effectiveVisiblityCoeff = visibilityCoefficient * effectiveDistanceCoeff / maxPositiveDistCoeff;*<br/>
+*visibilityCoefficient by default is set to 2 (after some game balancing).*<br/>
+*effectiveDistanceCoefficient is the distance coefficient calculated above*<br/>
+*maxPositiveDistanceCoefficient is the maximum possible value for the distance coefficient = 5*<br/>
+* ***Enemy Hunt State***: When the enemy is actively hunting the player, the HuntCoefficient is 5, and when passively hunting the HuntCoefficient is 2. After these menace parameters are calculated, their added to the current menace value, which is clamped between 0 and 100. This menace updation happens once per second. After the menace is
+updated, the director sets the placeholder variable the enemy AI has for director advice, as either stateNames.prowl or stateNames.avoid. The director also sets one of the quadrants as the vicinity of the player that the enemy AI uses as a starting point for its prowl.
+
 Quadrant Suggestion
 The director maintains 2 arrays, one that stores the transforms of all quadrants centre points and the other that
 stores the corner points of the 4 cornering quadrants.

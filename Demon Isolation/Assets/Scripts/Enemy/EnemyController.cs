@@ -79,7 +79,7 @@ public class EnemyController : MonoBehaviour
         {
             yield return wait;
             StateChoice();
-            Debug.Log("Current State: " + currentStateIndex);
+            //Debug.Log("Current State: " + currentStateIndex);
             StateInit();
             Coroutine currentRoutine = StartCoroutine(stateRoutineList[(int)currentStateIndex]());
             try

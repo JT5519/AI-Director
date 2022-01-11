@@ -12,7 +12,7 @@ The goal of this project was to build an AI Director to pace the level of stress
 <br/>*First Person View as the player. The bottom right side has a top view minimap to better see the Director and Enemy AI behaviour. The top view camera should be disabled for the ideal game experience*<br/><br/>
 
  
-## Design
+## Design and Implementation
 
 ### The Enemy AI
 #### Behaviours
@@ -84,48 +84,35 @@ than the shortFOV radius.
 * ***Enemy Hunt State***: When the enemy is actively hunting the player, the HuntCoefficient is 5, and when passively hunting the HuntCoefficient is 2. After these menace parameters are calculated, their added to the current menace value, which is clamped between 0 and 100. This menace updation happens once per second. After the menace is
 updated, the director sets the placeholder variable the enemy AI has for director advice, as either stateNames.prowl or stateNames.avoid. The director also sets one of the quadrants as the vicinity of the player that the enemy AI uses as a starting point for its prowl.
 
-Quadrant Suggestion
-The director maintains 2 arrays, one that stores the transforms of all quadrants centre points and the other that
-stores the corner points of the 4 cornering quadrants.
-When the director determines that the enemy AI should prowl near the player, it checks to find the quadrant
-that the player is closest to. It optimises this search by instantly returning any quadrant that has a distance to
-the player lesser than half of the quadrant dimension since this essentially means the player is within the
-bounds of that quadrant.
-When the director determines that the enemy should prowl away from the player, it checks the corner quadrant
-array to determine which corner quadrant is farthest from the player and sends the enemy AI that way.
-The Game World
-The map has 9 quadrants with each quadrant containing 4 rooms. The rooms have 2 types of objects, generic
-ones (coloured in blue) and hiding spots (coloured in black).
-The two kinds of generic objects, and the only type of hiding spot in the game
-Both, the hiding spots as well as the generic objects are in the PoI (Point of Interest) layer for all collision and
-ray cast purposes. This is how the enemy AI knows that these are the objects to check out in the vicinity it is
-currently prowling.
-The hiding spot is interactable to the player, and they can ‘Press E’ to enter and hide inside it, and similarly
-‘Press E’ to exit the hiding spot. For the duration the player is inside the hiding spot, its layer is set to an
-invisible layer that collides or interacts with nothing, thus becoming invisible to the enemy’s vision sensors.
-The [HideManager.cs] script handles the hide state of the hide spot it is attached to and enables and disables
-the hide and exit messages.
-The Player
-The player has a [PlayerController.cs] that is responsible for handling player movement and sets and resets
-the player hidden flag and the player visibility flag.
-The player has simple WASD movement controls and can switch to a slow walking speed when keeping the
-Left Ctrl key pressed. The player can look around with the mouse and press E to enter and exit hide spots all
-over the map.
-Player man, they’re a bland character, no personality!
-The player has a NavMeshObstacle component (the green box) so that the enemy AI doesn’t try to fuse with
-the player when hunting. This ensures that the enemy AI stops a few units before the player’s body begins.
-Future Work
-The game is not a complete game yet. There are no win or lose conditions. The enemy AI when successful
-with its hunting, will only come stop in front of the player. This was intentional to test the AI Director but also
-because of time constraints. With more time, I would implement a game manager that created and managed a
-story on top of this game world thus giving the player some goals to accomplish in the game.
-Also, one technical aspect I would implement was when the director suggests to the enemy AI to go to a far
-away quadrant, it doesn’t check the path the enemy AI takes to do so. So, there can be cases where the enemy
-AI temporarily heads towards the player instead of away, on their way to the far corner. While this doesn’t
-change the game experience too much, it is something I consider would improve the quality of the game
-pacing.
-Another technical aspect I would implement is to give the enemy AI audio sensors as well. That way the
-enemy AI would sense the player if they ran around while being too close to the enemy and would have to
-slow walk to avoid alerting the enemy. As of now, the enemy only has visual senses, and the player makes no
-sound while walking or running.
-Finally, I would make the game world slightly less symmetric with more unique points of interest and betterlooking assets.
+#### Quadrant Suggestion
+The director maintains 2 arrays, one that stores the transforms of all quadrants centre points and the other that stores the corner points of the 4 cornering quadrants.
+When the director determines that the enemy AI should prowl near the player, it checks to find the quadrant that the player is closest to. It optimises this search by instantly returning any quadrant that has a distance to the player lesser than half of the quadrant dimension since this essentially means the player is within the bounds of that quadrant. When the director determines that the enemy should prowl away from the player, it checks the corner quadrant array to determine which corner quadrant is farthest from the player and sends the enemy AI that way.
+
+<br/><br/>
+### The Game World
+The map has 9 quadrants with each quadrant containing 4 rooms. The rooms have 2 types of objects, generic ones (coloured in blue) and hiding spots (coloured in black).
+
+![Points of Interest in the Game World](Snaps/GameWorld.png)
+<br/>*The two kinds of generic objects, and the only type of hiding spot in the game*<br/><br/>
+
+Both, the hiding spots as well as the generic objects are in the PoI (Point of Interest) layer for all collision and ray cast purposes. This is how the enemy AI knows that these are the objects to check out in the vicinity it is currently prowling.
+
+The hiding spot is interactable to the player, and they can ‘Press E’ to enter and hide inside it, and similarly ‘Press E’ to exit the hiding spot. For the duration the player is inside the hiding spot, its layer is set to an invisible layer that collides or interacts with nothing, thus becoming invisible to the enemy’s vision sensors. The ***HideManager.cs*** script handles the hide state of the hide spot it is attached to and enables and disables the hide and exit messages.
+
+<br/><br/>
+### The Player Character
+The player has a ***PlayerController.cs*** that is responsible for handling player movement and sets and resets the player hidden flag and the player visibility flag. 
+The player has simple WASD movement controls and can switch to a slow walking speed when keeping the Left Ctrl key pressed. The player can look around with the mouse and press E to enter and exit hide spots all over the map.
+
+![The Player Character](Snaps/Player.png)
+<br/>*The Player character, so bland, no personality!*<br/><br/>
+
+
+The player has a NavMeshObstacle component (the green box) so that the enemy AI doesn’t try to fuse with the player when hunting. This ensures that the enemy AI stops a few units before the player’s body begins.
+
+<br/><br/>
+## Future Work
+* The game is not a complete game yet. There are no win or lose conditions. The enemy AI when successful with its hunting, will only come stop in front of the player. This was intentional to test the AI Director but also because of time constraints. With more time, I would implement a game manager that created and managed a story on top of this game world thus giving the player some goals to accomplish in the game. 
+* One technical aspect I want to implement is when the director suggests to the enemy AI to go to a far away quadrant, it doesn’t check the path the enemy AI takes to do so. So, there can be cases where the enemy AI temporarily heads towards the player instead of away, on their way to the far corner. While this doesn’t change the game experience too much, it is something I consider would improve the quality of the game pacing.
+* Another technical aspect I want to implement is to give the enemy AI audio sensors as well. That way the enemy AI would sense the player if they ran around while being too close to the enemy and would have to slow walk to avoid alerting the enemy. As of now, the enemy only has visual senses, and the player makes no sound while walking or running.
+* Finally, I want to make the game world slightly less symmetric with more unique points of interest and more polished assets.

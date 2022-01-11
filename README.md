@@ -4,65 +4,51 @@
 
 The goal of this project was to build an AI Director to pace the level of stress/fear felt by the player. The game draws heavy inspiration from Alien: Isolation and takes place in a similar situation where the player is trapped in the game map with an inhuman killer. The enemy uses its short range, long range, and extremely shortrange vision sensors to hunt for the player. The game does not cheat, in the sense that the enemy AI is never given information about the player. The AI Director only suggests to the enemy AI, the general vicinity of the player, the enemy AI must hunt the player using its own senses. The AI Director maintains a menace bar to measure how “menaced” the player is and appropriately decides whether to suggest a point in the vicinity of the player or a point far away from the player to hunt next. This way, using the menace bar and giving appropriate suggestions to the enemy AI, the director tries to balance the pacing of the game.
 
+![Top View](Snaps/TopView.png)
+<br/>*Top view of the map. The player is the yellow capsule, and the enemy is the red capsule. The map has 9 quadrants and each quadrant has 4 rooms*<br/><br/>
 
-![image](https://user-images.githubusercontent.com/53168036/148997979-24ba0574-b917-415e-9b4a-569c525ed4cb.png)
 
-Top view of the map. The player is the yellow capsule, and the enemy is the red capsule. The map has 9 quadrants and each quadrant has 4 rooms
+![FPS View](Snaps/FpsView.png)
+<br/>*First Person View as the player. The bottom right side has a top view minimap to better see the Director and Enemy AI behaviour. The top view camera should be disabled for the ideal game experience*<br/><br/>
 
-First Person View as the player. The bottom right side has a top view minimap to better see the Director and Enemy AI behaviour. The top view
-camera should be disabled for the ideal game experience 
-Design
-The Enemy AI
-Behaviours
-The Enemy AI has 2 behaviours: Hunting and Prowling. Hunting is further split into active hunting and passive
-hunting.
-Active Hunt: The enemy AI is in the active hunt state when its vision sensors see the player. The enemy AI
-will instantly transition from any state to the hunt state as soon as it senses the player. It actively chases the
-player until it gets to player OR the player manages to hide in time. If it does get to the player, it pauses in
-front of the player which is where ideally a death animation would play.
-Passive Hunt: The enemy AI only switches to passive hunt if it was in the active hunt state and the player
-managed to hide in time. It frantically sweeps the area around the last spot it saw the player. If it does find the
-player it switches to active hunt again, else it gives up and listens to the director’s suggestions for what to do
-next.
-Prowl: The enemy AI prowls a particular location that the director advises it to. It only does the prowling
-behaviour when it knows it doesn’t need to hunt. Depending on how menaced the player is, the director may
-advice the enemy AI to head to a location near the vicinity of the player (last known quadrant location) or
-away from the player (farthest quadrant from the player).
-Technical Design
-The Enemy AI executes all its behaviours via coroutines. The [EnemyController.cs] script attached to the
-enemy game object is responsible for controlling the AI based on what its vision sensors are detecting and
-what the director is suggesting. On Start, the script starts the ActionCycle Coroutine that is responsible for
-deciding and starting the appropriate behavior coroutines.
-The action cycle first checks if any of the vision sensors see the player, if they do, the ActiveHunt coroutine
-is started and that coroutine then takes over until the player is lost in the vision sensors.
-If the ActionCycle routine determines that the vision sensors do not see a target, it then checks if the enemy
-AI wants to set itself to a particular state. For example, when the ActiveHunt routine’s loop ends when the
-vision sensors do not see the player anymore, the ideal behaviour should be to sweep the immediate area, i.e.,
-execute the passive hunt behaviour. So, the ActiveHunt coroutine sets a NextState variable to
-stateNames.passiveHunt (stateNames is an enum to encapsulate state indices). The ActionCycle sees this, and
-then sets the enemy AI state to whatever the NextState variable was set to.
-Finally, if the enemy AI hasn’t set it’s NextState variable either, the enemy AI takes the AI Directors advice
-on where to go and prowl next. The ActionCycle routine then sets the behaviour to whatever the Director
-suggests. The Director can only tell the enemy AI to prowl certain locations, which the director determines as
-apt to pace the game.
-The ActionCycle routine also starts an InterruptCheckRoutine for states that allow themselves to be
-interruptable (state structure is covered further down the document). The InterruptCheckRoutine periodically
-checks if the player is visible and if it is, it sets the StateChangeFlag to true and immediately stops the currently 
-executing behaviour (that is obviously interruptible) so that the ActionCycle routine may set the behaviour to
-ActiveHunt. A point to note here is that the state changing mechanism is controlled solely by the ActionCycle
-routine and behaviour routines may only set the NextState variable to have some control over the next state
-decision. This ensures one central mechanism that controls all behaviour changes.
-(To clarify, state is just a struct variable of the state type that encapsulate state properties. States are linked
-to their behaviour coroutines using indexes)
-The enemy AI (looks menacing, doesn’t he?)
-Navigation
+ 
+## Design
+
+### The Enemy AI
+#### Behaviours
+The Enemy AI has 2 behaviours: Hunting and Prowling. Hunting is further split into active hunting and passive hunting.
+
+Active Hunt: The enemy AI is in the active hunt state when its vision sensors see the player. The enemy AI will instantly transition from any state to the hunt state as soon as it senses the player. It actively chases the player until it gets to player OR the player manages to hide in time. If it does get to the player, it pauses in front of the player which is where ideally a death animation would play.
+
+Passive Hunt: The enemy AI only switches to passive hunt if it was in the active hunt state and the player managed to hide in time. It frantically sweeps the area around the last spot it saw the player. If it does find the player it switches to active hunt again, else it gives up and listens to the director’s suggestions for what to do next.
+
+Prowl: The enemy AI prowls a particular location that the director advises it to. It only does the prowling behaviour when it knows it doesn’t need to hunt. Depending on how menaced the player is, the director may advice the enemy AI to head to a location near the vicinity of the player (last known quadrant location) or away from the player (farthest quadrant from the player).
+
+#### Technical Design
+The Enemy AI executes all its behaviours via coroutines. The ***EnemyController.cs*** script attached to the enemy game object is responsible for controlling the AI based on what its vision sensors are detecting and what the director is suggesting. On Start, the script starts the *ActionCycle* Coroutine that is responsible for deciding and starting the appropriate behavior coroutines.
+
+> The action cycle first checks if any of the vision sensors see the player, if they do, the *ActiveHunt* coroutine is started and that coroutine then takes over until the player is lost in the vision sensors.
+
+> If the *ActionCycle* routine determines that the vision sensors do not see a target, it then checks if the enemy AI wants to set itself to a particular state. For example, when the *ActiveHunt* routine’s loop ends when the vision sensors do not see the player anymore, the ideal behaviour should be to sweep the immediate area, i.e., execute the passive hunt behaviour. So, the *ActiveHunt* coroutine sets a *NextState* variable to *stateNames.passiveHunt* (stateNames is an enum to encapsulate state indices). The *ActionCycle* sees this, and then sets the enemy AI state to whatever the *NextState* variable was set to.
+
+> Finally, if the enemy AI hasn’t set it’s *NextState* variable either, the enemy AI takes the AI Directors advice on where to go and prowl next. The *ActionCycle* routine then sets the behaviour to whatever the Director suggests. The Director can only tell the enemy AI to prowl certain locations, which the director determines as apt to pace the game.
+
+The *ActionCycle* routine also starts an *InterruptCheckRoutine* for states that allow themselves to be interruptable (state structure is covered further down the document). The *InterruptCheckRoutine* periodically checks if the player is visible and if it is, it sets the *StateChangeFlag* to true and immediately stops the currently executing behaviour (that is obviously interruptible) so that the *ActionCycle* routine may set the behaviour to *ActiveHunt*. A point to note here is that the state changing mechanism is controlled **solely** by the *ActionCycle* routine and behaviour routines may only set the *NextState* variable to have some control over the next state decision. **This ensures one central mechanism that controls all behaviour changes.**
+
+*(To clarify, state is just a struct variable of the state type that encapsulate state properties. States are linked
+to their behaviour coroutines using indexes)*
+
+![Enemy Boi](Snaps/EnemyAI.png)
+<br/>*The enemy AI (looks menacing, doesn’t he?)*<br/><br/>
+
+#### Navigation
 The enemy AI is a navmesh agent and it uses Unity’s built in NavMesh system.
-The baked NavMesh
-Sensing
-The enemy AI has 3 vision sensors: An extremely short range 360 degrees sensor, A short range 120 degree
-FOV sensor, and a long range 22.5 degree FOV sensor. Editor scripts visualise these FOV’s well (highlight
-the “Sense” game object that has the “Enemy” game object as its parent and expand the VisionSense script
-component in the inspector if it already is not).
+
+![Navmesh Region](Snaps/NavMesh.png)
+<br/>*The baked NavMesh*<br/><br/>
+
+#### Sensing
+The enemy AI has 3 vision sensors: An extremely short range 360 degrees sensor, A short range 120 degree FOV sensor, and a long range 22.5 degree FOV sensor. Editor scripts visualise these FOV’s well (highlight the “Sense” game object that has the “Enemy” game object as its parent and expand the VisionSense script component in the inspector if it already is not).
 The Three sensing radii with their FOV lines. The innermost sensor has no FOV lines because it has a 360 degree FOV
 Technical Design
 The [VisionSense.cs] script has 3 coroutines that run with varying periodicities, for each of the three vision

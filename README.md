@@ -1,5 +1,10 @@
 # AI-Director
 
+[Here's a video that explains and demonstrates the project](https://www.youtube.com/watch?v=L_wyFUZwEG8)
+<br/><br/>
+Click [here](https://jt5519.github.io/AI-Director/) to play the game.
+<br/><br/>
+
 ## Overview
 
 The goal of this project was to build an AI Director to pace the level of stress/fear felt by the player. The game draws heavy inspiration from Alien: Isolation and puts the player in a similar situation where they are trapped in the game world with an inhuman killer on the prowl, with supernatural abilities. This killer enemy uses its long range, short range, and extreme-short-range vision sensors to hunt for the player. The game AIs (enemy AI and Director AI) do not cheat i.e.,the Director knows the exact location of the player and the enemy at all times, but never gives the enemy AI the player information it has. It only suggests the general vicinity of the player to the enemy AI. Beyond that, the enemy AI must use its own sensors to hunt the player.
@@ -13,8 +18,7 @@ The AI Director maintains a menace bar to measure how “menaced” the player i
 ![FPS View](Snaps/FpsView.png)
 <br/>*First Person View as the player. The bottom right side has a top view minimap to better see the Director and Enemy AI behaviour. The top view camera should be disabled for the ideal game experience*<br/><br/>
 
-[Here's a video that explains and demonstrates the project](https://www.youtube.com/watch?v=L_wyFUZwEG8)
-<br/><br/>
+
 ## Design and Implementation
 
 ### The Enemy AI

@@ -7,7 +7,7 @@ public class EnemyMotor : MonoBehaviour
 {
     NavMeshAgent agent;
    
-    private void Start()
+    private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
     }

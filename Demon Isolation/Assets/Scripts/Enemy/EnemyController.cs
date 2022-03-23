@@ -52,9 +52,10 @@ public class EnemyController : MonoBehaviour
     public float huntSpeed  = 10;
     public float prowlSpeed = 5;
 
-    private void Awake()
+    private void Start()
     {
         enemyMotor = GetComponent<EnemyMotor>();
+        enemyMotor.MoveToPoint(GameObject.FindGameObjectWithTag("Player").transform.position);
         agent = GetComponent<NavMeshAgent>();
 
         //creating the states 
@@ -141,15 +142,19 @@ public class EnemyController : MonoBehaviour
         WaitForSeconds wait = new WaitForSeconds(0.2f);
         yield return wait;
         
-        try
+/*        try
         {
             enemyMotor.MoveToPoint(directorPOI.position);
         }
         catch(UnassignedReferenceException)
         {
             //Do nothing, prowl vicinity
+        }*/
+        if(directorPOI)
+        {
+            enemyMotor.MoveToPoint(directorPOI.position);
+            yield return new WaitUntil(NavMeshPathCompletionTest);
         }
-        yield return new WaitUntil(NavMeshPathCompletionTest);
         Queue<Vector3> POIs = FindVicinityPOIs();
         
         while(POIs.Count!=0)

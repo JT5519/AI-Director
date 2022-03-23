@@ -55,7 +55,6 @@ public class EnemyController : MonoBehaviour
     private void Start()
     {
         enemyMotor = GetComponent<EnemyMotor>();
-        enemyMotor.MoveToPoint(GameObject.FindGameObjectWithTag("Player").transform.position);
         agent = GetComponent<NavMeshAgent>();
 
         //creating the states 

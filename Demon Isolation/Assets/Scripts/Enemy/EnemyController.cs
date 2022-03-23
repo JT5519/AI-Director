@@ -52,7 +52,7 @@ public class EnemyController : MonoBehaviour
     public float huntSpeed  = 10;
     public float prowlSpeed = 5;
 
-    private void Start()
+    private void Awake()
     {
         enemyMotor = GetComponent<EnemyMotor>();
         agent = GetComponent<NavMeshAgent>();
